@@ -6,9 +6,14 @@ golang学习 Mysql数据库操作类
 
 ### 2、使用示例
 ```
+func main(){
 	DB := cylib.DbHandle
-	books := DB.Table("cy_books").Where(map[string]string{"status":"1"}).Find()
 
+	//1、获取单条数据
+	books := DB.Table("cy_books").Where(map[string]string{"status":"1"}).Find()
+	
+	fmt.Println(books)
+}
 ```
 
 ### 开启你的DB操作之旅 ^_^
