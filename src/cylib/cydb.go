@@ -12,7 +12,9 @@ import (
 
 var CyDb *sql.DB = nil
 
-type CyDB struct {
+var DbInstance cyDbStruct
+
+type cyDbStruct struct {
 	tableSql string
 	whereSql string
 	fieldSql string
