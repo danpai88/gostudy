@@ -1,5 +1,5 @@
 # gostudy
-golang学习 Mysql数据库操作类
+golang学习 golang Mysql数据库操作类
 
 ### 1、打开 cylib/cydb.go 文件中的 Connect 方法，设置对应的数据库连接信息
 
@@ -11,7 +11,7 @@ func main(){
 
 	//1、获取单条数据
 	books := DB.Table("cy_books").Where(map[string]string{"status":"1"}).Find()
-	
+
 	fmt.Println(books)
 }
 ```
