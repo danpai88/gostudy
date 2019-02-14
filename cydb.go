@@ -40,13 +40,13 @@ func Connect() {
 }
 
 //数据表
-func(this CyDB) Table(table string) CyDB {
+func(this cyDbStruct) Table(table string) cyDbStruct {
 	this.tableSql = table
 	return this
 }
 
 //重置查询语句
-func (this CyDB) reset() {
+func (this cyDbStruct) reset() {
 	this.tableSql = ""
 	this.whereSql = ""
 	this.fieldSql = ""
@@ -56,7 +56,7 @@ func (this CyDB) reset() {
 }
 
 //执行查询
-func(this CyDB) Select() []map[string]string {
+func(this cyDbStruct) Select() []map[string]string {
 	if this.fieldSql == "" {
 		this.fieldSql = "*"
 	}
@@ -72,7 +72,7 @@ func(this CyDB) Select() []map[string]string {
 }
 
 //where
-func(this CyDB) Where(where map[string]string) CyDB {
+func(this cyDbStruct) Where(where map[string]string) cyDbStruct {
 	for key, val := range where{
 		this.whereSql += fmt.Sprintf(" `%s`='%s' and", key, val)
 	}
@@ -80,7 +80,7 @@ func(this CyDB) Where(where map[string]string) CyDB {
 }
 
 //获取一行
-func (this CyDB) Find() map[string]string {
+func (this cyDbStruct) Find() map[string]string {
 	results := this.Select()
 	var data map[string]string
 	if len(results) > 0 {
@@ -90,24 +90,24 @@ func (this CyDB) Find() map[string]string {
 }
 
 //原生where
-func(this CyDB) WhereRaw(where string) CyDB {
+func(this cyDbStruct) WhereRaw(where string) cyDbStruct {
 	this.whereSql += fmt.Sprintf(" %s and", where)
 	return this
 }
 
 //获取指定字段
-func(this CyDB) Field(field string) CyDB {
+func(this cyDbStruct) Field(field string) cyDbStruct {
 	this.fieldSql = field
 	return this
 }
 
 //指定排序
-func(this CyDB) OrderBy(orderby string) CyDB {
+func(this cyDbStruct) OrderBy(orderby string) cyDbStruct {
 	this.orderSql = " order by " + orderby
 	return this
 }
 
-func (this CyDB) parseWhere() string{
+func (this cyDbStruct) parseWhere() string{
 	var sqlString = ""
 	if this.whereSql != "" {
 		sqlString += " where " + strings.TrimRight(this.whereSql, "and")
@@ -116,7 +116,7 @@ func (this CyDB) parseWhere() string{
 }
 
 //统计
-func(this CyDB) Count() uint64 {
+func(this cyDbStruct) Count() uint64 {
 	var sqlString = fmt.Sprintf("select count(1) as count from %s ", this.tableSql)
 
 	if this.whereSql != "" {
@@ -129,7 +129,7 @@ func(this CyDB) Count() uint64 {
 }
 
 //插入数据
-func(this CyDB) Insert(datas map[string]string) (LastInsertId int64) {
+func(this cyDbStruct) Insert(datas map[string]string) (LastInsertId int64) {
 	var sqlString = "insert into " + this.tableSql
 
 	fields := make([]string, 0)
@@ -147,7 +147,7 @@ func(this CyDB) Insert(datas map[string]string) (LastInsertId int64) {
 }
 
 //执行add update delete
-func(this CyDB) Exec(sqlString string) int64 {
+func(this cyDbStruct) Exec(sqlString string) int64 {
 	this.reset()
 
 	ret, err := CyDb.Exec(sqlString)
@@ -164,7 +164,7 @@ func(this CyDB) Exec(sqlString string) int64 {
 }
 
 //执行select
-func(this CyDB) Query(sqlString string) []map[string]string {
+func(this cyDbStruct) Query(sqlString string) []map[string]string {
 	this.reset()
 
 	rows, err := CyDb.Query(sqlString)
@@ -199,7 +199,7 @@ func(this CyDB) Query(sqlString string) []map[string]string {
 }
 
 //更新操作
-func(this CyDB) Update(datas map[string]string) (RowsAffected int64) {
+func(this cyDbStruct) Update(datas map[string]string) (RowsAffected int64) {
 	var sqlString = "update " + this.tableSql +" set "
 
 	fields := make([]string, 0)
@@ -215,7 +215,7 @@ func(this CyDB) Update(datas map[string]string) (RowsAffected int64) {
 }
 
 //删除操作
-func(this CyDB) Delete() (deleteRow int64) {
+func(this cyDbStruct) Delete() (deleteRow int64) {
 	var sqlString = "delete from " + this.tableSql
 	sqlString += this.parseWhere()
 	return this.Exec(sqlString)
