@@ -21,6 +21,20 @@ type cyDbStruct struct {
 	orderSql string
 	limitSql string
 	groupSql string
+	leftJoinSql string
+	aliasSql string
+}
+
+//重置查询语句
+func (this cyDbStruct) reset() {
+	this.tableSql = ""
+	this.whereSql = ""
+	this.fieldSql = ""
+	this.orderSql = ""
+	this.limitSql = ""
+	this.groupSql = ""
+	this.leftJoinSql = ""
+	this.aliasSql = ""
 }
 
 func init()  {
@@ -45,30 +59,34 @@ func(this cyDbStruct) Table(table string) cyDbStruct {
 	return this
 }
 
-//重置查询语句
-func (this cyDbStruct) reset() {
-	this.tableSql = ""
-	this.whereSql = ""
-	this.fieldSql = ""
-	this.orderSql = ""
-	this.limitSql = ""
-	this.groupSql = ""
-}
-
 //执行查询
 func(this cyDbStruct) Select() []map[string]string {
+	sqlString := this.FetchSql()
+	results := this.Query(sqlString)
+	return results
+}
+
+//返回sql语句
+func (this cyDbStruct) FetchSql() string {
 	if this.fieldSql == "" {
 		this.fieldSql = "*"
 	}
 
-	var sqlString = fmt.Sprintf("select %s from %s ", this.fieldSql, this.tableSql)
+	var sqlString = fmt.Sprintf("select %s from %s %s", this.fieldSql, this.aliasSql, this.tableSql)
 
+	sqlString += this.leftJoinSql
 	sqlString += this.parseWhere()
 
 	sqlString += this.orderSql
+	sqlString += this.limitSql
 
-	results := this.Query(sqlString)
-	return results
+	return sqlString
+}
+
+//指定行数
+func (this cyDbStruct) Limit(num int) cyDbStruct {
+	this.limitSql = fmt.Sprintf(" limit 0,%d ", num)
+	return this
 }
 
 //where
@@ -79,14 +97,25 @@ func(this cyDbStruct) Where(where map[string]string) cyDbStruct {
 	return this
 }
 
+//left join
+func (this cyDbStruct) LeftJoin(table string, on string) cyDbStruct {
+	this.leftJoinSql += " left join " + table + " on " + on
+	return this
+}
+
+//表别名
+func (this cyDbStruct) Alias(alias string) {
+
+}
+
 //获取一行
 func (this cyDbStruct) Find() map[string]string {
+	this.limitSql = " limit 1 "
 	results := this.Select()
-	var data map[string]string
 	if len(results) > 0 {
-		data = results[0]
+		return results[0]
 	}
-	return data
+	return nil
 }
 
 //原生where
@@ -150,6 +179,12 @@ func(this cyDbStruct) Insert(datas map[string]string) (LastInsertId int64) {
 func(this cyDbStruct) Exec(sqlString string) int64 {
 	this.reset()
 
+	//断线重连
+	err := CyDb.Ping()
+	if err != nil {
+		Connect()
+	}
+
 	ret, err := CyDb.Exec(sqlString)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -167,6 +202,12 @@ func(this cyDbStruct) Exec(sqlString string) int64 {
 func(this cyDbStruct) Query(sqlString string) []map[string]string {
 	this.reset()
 
+	//断线重连
+	err := CyDb.Ping()
+	if err != nil {
+		Connect()
+	}
+	//log.Println(sqlString)
 	rows, err := CyDb.Query(sqlString)
 	defer rows.Close()
 	if err != nil {
