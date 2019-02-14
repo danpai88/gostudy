@@ -1,4 +1,4 @@
-package cylib
+package gostudy
 
 import (
 	"database/sql"
