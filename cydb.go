@@ -12,6 +12,8 @@ import (
 
 var CyDb *sql.DB = nil
 
+const DB_LINK = "test:test@tcp(127.0.0.1:3306)/db_user?charset=utf8"
+
 var DbInstance cyDbStruct
 
 type cyDbStruct struct {
@@ -23,6 +25,7 @@ type cyDbStruct struct {
 	groupSql string
 	leftJoinSql string
 	aliasSql string
+	distinctSql string
 }
 
 //重置查询语句
@@ -35,16 +38,22 @@ func (this cyDbStruct) reset() {
 	this.groupSql = ""
 	this.leftJoinSql = ""
 	this.aliasSql = ""
+	this.distinctSql = ""
 }
 
 func init()  {
 	Connect()
 }
 
+func (this cyDbStruct) DISTINCT(distinct string) cyDbStruct {
+	this.distinctSql = "DISTINCT(" + distinct + "),"
+	return this
+}
+
 //链接数据库
 func Connect() {
-	if CyDb == nil{
-		db, err := sql.Open("mysql", "test:test@tcp(127.0.0.1:3306)/db_user?charset=utf8")
+	if CyDb == nil {
+		db, err := sql.Open("mysql", DB_LINK)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(0)
@@ -72,7 +81,7 @@ func (this cyDbStruct) FetchSql() string {
 		this.fieldSql = "*"
 	}
 
-	var sqlString = fmt.Sprintf("select %s from %s %s", this.fieldSql, this.aliasSql, this.tableSql)
+	var sqlString = fmt.Sprintf("select %s%s from %s %s", this.distinctSql, this.fieldSql, this.aliasSql, this.tableSql)
 
 	sqlString += this.leftJoinSql
 	sqlString += this.parseWhere()
@@ -182,6 +191,7 @@ func(this cyDbStruct) Exec(sqlString string) int64 {
 	//断线重连
 	err := CyDb.Ping()
 	if err != nil {
+		CyDb = nil
 		Connect()
 	}
 
@@ -205,6 +215,7 @@ func(this cyDbStruct) Query(sqlString string) []map[string]string {
 	//断线重连
 	err := CyDb.Ping()
 	if err != nil {
+		CyDb = nil
 		Connect()
 	}
 	//log.Println(sqlString)
