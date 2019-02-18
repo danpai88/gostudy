@@ -68,6 +68,16 @@ func(this cyDbStruct) Table(table string) cyDbStruct {
 	return this
 }
 
+//where in
+func (this cyDbStruct) WhereIn(field string, vals []interface{}) cyDbStruct {
+	var tmp = make([]string, 0)
+	for _, val := range vals{
+		tmp = append(tmp, fmt.Sprintf("%v", val))
+	}
+	this.whereSql += fmt.Sprintf("%s in('%s')", field, strings.Join(tmp, "','"))
+	return this
+}
+
 //执行查询
 func(this cyDbStruct) Select() []map[string]string {
 	sqlString := this.FetchSql()
@@ -99,9 +109,9 @@ func (this cyDbStruct) Limit(num int) cyDbStruct {
 }
 
 //where
-func(this cyDbStruct) Where(where map[string]string) cyDbStruct {
+func(this cyDbStruct) Where(where map[string]interface{}) cyDbStruct {
 	for key, val := range where{
-		this.whereSql += fmt.Sprintf(" `%s`='%s' and", key, val)
+		this.whereSql += fmt.Sprintf(" `%v`='%v' and", key, val)
 	}
 	return this
 }
@@ -218,7 +228,7 @@ func(this cyDbStruct) Query(sqlString string) []map[string]string {
 		CyDb = nil
 		Connect()
 	}
-	//log.Println(sqlString)
+	log.Println(sqlString)
 	rows, err := CyDb.Query(sqlString)
 	defer rows.Close()
 	if err != nil {
