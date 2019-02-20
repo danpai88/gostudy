@@ -231,7 +231,7 @@ func(this cyDbStruct) Query(sqlString string) []map[string]string {
 		CyDb = nil
 		Connect()
 	}
-	log.Println(sqlString)
+	//log.Println(sqlString)
 	rows, err := CyDb.Query(sqlString)
 	defer rows.Close()
 	if err != nil {
