@@ -91,9 +91,12 @@ func (this cyDbStruct) FetchSql() string {
 		this.fieldSql = "*"
 	}
 
-	var sqlString = fmt.Sprintf("select %s%s from %s %s", this.distinctSql, this.fieldSql, this.aliasSql, this.tableSql)
+	var sqlString = fmt.Sprintf("select %s%s from %s %s",
+		this.distinctSql,
+		this.fieldSql,
+		this.tableSql,
+		this.leftJoinSql)
 
-	sqlString += this.leftJoinSql
 	sqlString += this.parseWhere()
 
 	sqlString += this.orderSql
@@ -104,21 +107,21 @@ func (this cyDbStruct) FetchSql() string {
 
 //指定行数
 func (this cyDbStruct) Limit(num int) cyDbStruct {
-	this.limitSql = fmt.Sprintf(" limit 0,%d ", num)
+	this.limitSql = fmt.Sprintf("limit 0,%d", num)
 	return this
 }
 
 //where
 func(this cyDbStruct) Where(where map[string]interface{}) cyDbStruct {
 	for key, val := range where{
-		this.whereSql += fmt.Sprintf(" `%v`='%v' and", key, val)
+		this.whereSql += fmt.Sprintf("`%v`='%v' and", key, val)
 	}
 	return this
 }
 
 //left join
 func (this cyDbStruct) LeftJoin(table string, on string) cyDbStruct {
-	this.leftJoinSql += " left join " + table + " on " + on
+	this.leftJoinSql += "left join " + table + " on " + on
 	return this
 }
 
@@ -129,7 +132,7 @@ func (this cyDbStruct) Alias(alias string) {
 
 //获取一行
 func (this cyDbStruct) Find() map[string]string {
-	this.limitSql = " limit 1 "
+	this.limitSql = "limit 1"
 	results := this.Select()
 	if len(results) > 0 {
 		return results[0]
@@ -151,7 +154,7 @@ func(this cyDbStruct) Field(field string) cyDbStruct {
 
 //指定排序
 func(this cyDbStruct) OrderBy(orderby string) cyDbStruct {
-	this.orderSql = " order by " + orderby
+	this.orderSql = "order by " + orderby + " "
 	return this
 }
 
@@ -164,16 +167,18 @@ func (this cyDbStruct) parseWhere() string{
 }
 
 //统计
-func(this cyDbStruct) Count() uint64 {
-	var sqlString = fmt.Sprintf("select count(1) as count from %s ", this.tableSql)
-
-	if this.whereSql != "" {
-		sqlString += " where " + strings.TrimRight(this.whereSql, "and")
-	}
-
+func(this cyDbStruct) Count() int {
+	this.fieldSql = "count(*) as count"
+	var sqlString = this.FetchSql()
 	ret := this.Query(sqlString)
 	count, _ := strconv.ParseUint(ret[0]["count"], 10, 64)
-	return count
+	return int(count)
+}
+
+func (this cyDbStruct) Page(page int, pageSize int) cyDbStruct {
+	start := (page-1) * pageSize
+	this.limitSql = "limit " + strconv.Itoa(start) + "," + strconv.Itoa(pageSize)
+	return this
 }
 
 //插入数据
