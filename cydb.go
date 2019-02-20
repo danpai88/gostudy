@@ -12,8 +12,6 @@ import (
 
 var CyDb *sql.DB = nil
 
-const DB_LINK = "test:test@tcp(127.0.0.1:3306)/db_user?charset=utf8"
-
 var DbInstance cyDbStruct
 
 type cyDbStruct struct {
@@ -53,7 +51,7 @@ func (this cyDbStruct) DISTINCT(distinct string) cyDbStruct {
 //链接数据库
 func Connect() {
 	if CyDb == nil {
-		db, err := sql.Open("mysql", DB_LINK)
+		db, err := sql.Open("mysql", getDbConfig())
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(0)
