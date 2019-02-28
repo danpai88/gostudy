@@ -8,11 +8,16 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"io"
 )
 
 var CyDb *sql.DB = nil
 
 var DbInstance cyDbStruct
+
+type CyDbStruct struct {
+	cyDbStruct
+}
 
 type cyDbStruct struct {
 	tableSql string
@@ -43,6 +48,31 @@ func init()  {
 	Connect()
 }
 
+func (this cyDbStruct) FileExist(filename string) bool {
+	var exist = true
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		exist = false
+	}
+	return exist
+}
+
+//讲sql语句写到文件
+func(this cyDbStruct) MarkLog(sql string) {
+	var fileName = "./sql.log"
+	var f *os.File
+
+	if this.FileExist(fileName) {
+		f, _ = os.OpenFile(fileName, os.O_APPEND, 0777)
+	}else {
+		f, _ = os.Create(fileName)
+	}
+
+	_, err := io.WriteString(f, sql+"\n")
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+}
+
 func (this cyDbStruct) DISTINCT(distinct string) cyDbStruct {
 	this.distinctSql = "DISTINCT(" + distinct + "),"
 	return this
@@ -56,6 +86,7 @@ func Connect() {
 			fmt.Println(err.Error())
 			os.Exit(0)
 		}
+		db.SetMaxIdleConns(0)
 		CyDb = db
 	}
 }
@@ -232,6 +263,9 @@ func(this cyDbStruct) Query(sqlString string) []map[string]string {
 		Connect()
 	}
 	//log.Println(sqlString)
+
+	this.MarkLog(sqlString)
+
 	rows, err := CyDb.Query(sqlString)
 	defer rows.Close()
 	if err != nil {
