@@ -83,11 +83,10 @@ func (this CyIO) NginxLog(req *http.Request) string {
 
 //读文件
 func (this CyIO) FileGetContent(file string) string {
-	path, _ := os.Getwd()
-	var filePath = path + "/" + file
+	var filePath = file
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		return string(content)
+		return ""
 	}
-	return "";
+	return string(content);
 }
